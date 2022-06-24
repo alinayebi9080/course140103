@@ -1,9 +1,17 @@
+import { ToastProvider } from "react-toast-notifications";
+import MainRouter from "./components/MainRouter";
+import FetchProvider from "./provider/FetchProvider";
+import MainProvider from "./provider/MainProvider";
 
 function App() {
   return (
-    <div className="App">
-
-    </div>
+    <ToastProvider>
+      <MainProvider>
+        <FetchProvider>
+          <MainRouter />
+        </FetchProvider>
+      </MainProvider>
+    </ToastProvider>
   );
 }
 
