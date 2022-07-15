@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFetch } from 'use-http';
+import Pagination from './../components/common/Pagination';
+import useDebounce from './../hooks/useDebounce';
 
 const UserList = () => {
 
@@ -7,11 +9,18 @@ const UserList = () => {
     const [pageCount, setPageCount] = useState(1)
     const [currentPage, setCurrentPage] = useState(1)
     const [resultPerPage, setResultPerPage] = useState(5)
+    const [searchQuery, setSearchQuery] = useState()
+
+    const searchItem = useDebounce(searchQuery, 500)
 
     const { get, response } = useFetch()
 
-    const handleGetData = async (page) => {
-        await get(`/api/admin/user/all?page=${page}`)
+    const handleGetData = async (page, lastName) => {
+
+        let query = { page }
+        if (lastName) query.lastName = lastName
+
+        await get(`/api/admin/user/all?${new URLSearchParams(query)}`)
         if (response.ok) {
             setUsers(response.data?.users)
             setResultPerPage(response.data?.resultsPerPage)
@@ -20,16 +29,20 @@ const UserList = () => {
     }
 
     useEffect(() => {
-        handleGetData(currentPage)
-    }, [currentPage])
+        handleGetData(currentPage, searchItem)
+    }, [currentPage, searchItem])
 
-    let pages = []
-    for (let i = 0; i < pageCount; i++) {
-        pages.push(i + 1)
+
+    const handleChangeQuery = ({ target: { value } }) => {
+        setSearchQuery(value)
+        setCurrentPage(1)
     }
 
     return (
         <div className="p-4">
+            <form>
+                <input onChange={handleChangeQuery} value={searchQuery} />
+            </form>
             <table className="table-auto min-w-full">
                 <thead className="bg-slate-800 border-t-2">
                     <tr>
@@ -51,9 +64,7 @@ const UserList = () => {
                 </tbody>
             </table>
             <div className="flex">
-                {pages.map(item =>
-                    <p className="m-2 cursor-pointer" onClick={() => setCurrentPage(item)}>{item}</p>
-                )}
+                <Pagination count={pageCount} onPageChange={e => setCurrentPage(e.selected + 1)} />
             </div>
 
         </div>
